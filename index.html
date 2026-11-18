@@ -1,36 +1,98 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EcomAI Pro</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#172b4d">
+<title>EcomAI Pro 商品管理中心 V2</title>
 <style>
-body{margin:0;background:#f1f5f9;font-family:Arial,sans-serif;color:#1e293b}
-header{background:#172b4d;color:white;padding:25px}
-main{padding:20px}
-.card{background:white;padding:20px;margin:12px 0;border-radius:14px}
-h1{font-size:25px}
-h2{color:#2563eb}
+*{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#172033;font-family:system-ui,"Microsoft YaHei",sans-serif}
+header{background:#172b4d;color:white;padding:20px 16px}header h1{margin:0 0 5px;font-size:22px}header p{margin:0;color:#dbe5f4;font-size:13px}
+nav{display:flex;gap:8px;overflow:auto;background:white;padding:10px;position:sticky;top:0}
+nav button,.btn{border:0;border-radius:9px;padding:10px 13px;background:#eaf0f9;color:#1e3a5f;font-size:14px}
+nav button.active,.btn.primary{background:#2563eb;color:white}
+main{max-width:950px;margin:auto;padding:15px}.view{display:none}.view.active{display:block}
+h2{font-size:19px;margin:6px 0 14px}.panel,.stat{background:white;border:1px solid #e5eaf2;border-radius:13px;padding:14px;margin-bottom:13px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.stat small{color:#64748b}.stat strong{display:block;color:#2563eb;font-size:23px;margin-top:6px}
+label{display:block;font-size:13px;color:#475569;margin:8px 0 5px}input,select,textarea{width:100%;padding:11px;border:1px solid #d7deea;border-radius:9px;background:white;font:inherit;font-size:14px}textarea{min-height:70px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 9px}.wide{grid-column:1/-1}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.btn.danger{background:#fee2e2;color:#991b1b}
+.searchrow{display:grid;grid-template-columns:1fr 125px;gap:8px;margin:8px 0}
+.product{background:white;border:1px solid #e5eaf2;border-radius:11px;padding:12px;margin:9px 0}.top{display:flex;justify-content:space-between;gap:8px}.name{font-weight:700;overflow-wrap:anywhere}
+.meta{font-size:12px;color:#64748b;line-height:1.8;margin-top:7px}.tag{font-size:11px;background:#edf3ff;color:#2456a6;padding:3px 8px;border-radius:20px}.low{color:#dc2626;font-weight:700}
+.empty{text-align:center;color:#64748b;padding:24px 8px}.note{font-size:12px;color:#64748b;line-height:1.7;background:#f8fafc;padding:10px;border-radius:9px;margin-top:10px}
+@media(min-width:650px){.stats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
-<header>
-<h1>🛍️ EcomAI Pro</h1>
-<p>淘宝 + 抖音 AI 电商智能工作台</p>
-</header>
+<header><h1>🛍️ EcomAI Pro</h1><p>淘宝 + 抖音双平台｜商品管理中心 V2.0</p></header>
+<nav><button class="active" data-page="home">经营首页</button><button data-page="products">商品管理</button><button data-page="stock">库存概览</button><button data-page="profit">利润计算</button></nav>
 <main>
+<section id="home" class="view active">
 <h2>经营管理中心</h2>
-<div class="card">🔍 AI 智能选品</div>
-<div class="card">📦 商品管理</div>
-<div class="card">🛒 订单管理</div>
-<div class="card">🏬 库存管理</div>
-<div class="card">🤖 AI 智能客服</div>
-<div class="card">📊 经营数据分析</div>
-<div class="card">💰 利润计算</div>
-<div class="card">🎬 短视频脚本生成</div>
-<div class="card">📢 营销推广</div>
+<div class="stats">
+<div class="stat"><small>商品总数</small><strong id="count">0</strong></div>
+<div class="stat"><small>在售商品</small><strong id="active">0</strong></div>
+<div class="stat"><small>库存总件数</small><strong id="totalStock">0</strong></div>
+<div class="stat"><small>低库存预警</small><strong id="lowCount">0</strong></div>
+</div>
+<div class="panel"><b>快捷操作</b><div class="actions"><button class="btn primary" onclick="page('products');document.getElementById('editor').scrollIntoView()">＋ 新增商品</button><button class="btn" onclick="exportCSV()">导出商品 CSV</button></div></div>
+<div class="panel"><b>最近添加</b><div id="recent"></div></div>
+<div class="note">数据保存在当前手机浏览器。清理浏览器数据或更换设备可能丢失，请定期导出备份。当前版本不自动连接淘宝/抖音店铺。</div>
+</section>
+<section id="products" class="view">
+<h2>商品管理中心</h2>
+<div class="panel" id="editor">
+<b id="formTitle">新增商品</b><input id="id" type="hidden">
+<div class="grid">
+<div class="wide"><label>商品名称 *</label><input id="name" placeholder="例如：纯棉短袖T恤"></div>
+<div><label>所属平台</label><select id="platform"><option>淘宝</option><option>抖音</option><option>淘宝+抖音</option></select></div>
+<div><label>SKU / 货号</label><input id="sku" placeholder="可选"></div>
+<div><label>分类</label><input id="category" placeholder="例如：服装"></div>
+<div><label>销售价（元）*</label><input id="price" type="number" min="0" step=".01"></div>
+<div><label>采购成本（元）</label><input id="cost" type="number" min="0" step=".01" value="0"></div>
+<div><label>库存数量 *</label><input id="stock" type="number" min="0" step="1" value="0"></div>
+<div><label>低库存预警值</label><input id="threshold" type="number" min="0" step="1" value="5"></div>
+<div><label>商品状态</label><select id="status"><option>在售</option><option>仓库中</option><option>缺货</option></select></div>
+</div>
+<label>备注 / 商品卖点</label><textarea id="notes" placeholder="材质、规格、颜色等真实信息"></textarea>
+<div class="actions"><button class="btn primary" onclick="saveProduct()">保存商品</button><button class="btn" onclick="resetForm()">清空</button></div>
+</div>
+<div class="panel"><b>商品列表</b>
+<div class="searchrow"><input id="search" placeholder="搜索名称或 SKU" oninput="render()"><select id="filter" onchange="render()"><option value="">全部平台</option><option>淘宝</option><option>抖音</option><option>淘宝+抖音</option></select></div>
+<div id="list"></div><div class="actions"><button class="btn" onclick="exportCSV()">导出 CSV 备份</button></div>
+</div>
+</section>
+<section id="stock" class="view"><h2>库存概览</h2><div class="panel"><b>低库存预警清单</b><div id="stockList"></div></div></section>
+<section id="profit" class="view"><h2>单品利润计算</h2><div class="panel">
+<label>销售价（元）</label><input id="sell" type="number" value="100">
+<label>采购成本（元）</label><input id="buy" type="number" value="40">
+<label>运费（元）</label><input id="ship" type="number" value="5">
+<label>平台及支付费用（元）</label><input id="fee" type="number" value="5">
+<label>推广费用（元）</label><input id="ad" type="number" value="0">
+<button class="btn primary" onclick="calc()">计算利润</button><div id="result" class="note">填写费用后计算预估单件利润。</div>
+</div></section>
 </main>
-</body>
-</html>
+<script>
+const KEY='ecomai_products_v2';let data=[];try{data=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(data))data=[]}catch(e){data=[]}
+const $=x=>document.getElementById(x),n=x=>Number($(x).value||0),money=x=>'¥'+Number(x||0).toFixed(2);
+function page(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));refresh();window.scrollTo(0,0)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>page(b.dataset.page));
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));refresh()}
+function resetForm(){['id','name','sku','category','notes'].forEach(x=>$(x).value='');$('price').value='';$('cost').value='0';$('stock').value='0';$('threshold').value='5';$('platform').value='淘宝';$('status').value='在售';$('formTitle').textContent='新增商品'}
+function saveProduct(){
+let name=$('name').value.trim();if(!name){alert('请填写商品名称');return}if($('price').value===''||n('price')<0){alert('请填写有效售价');return}if($('stock').value===''||n('stock')<0||!Number.isInteger(n('stock'))){alert('库存必须是非负整数');return}
+let p={id:$('id').value||String(Date.now()),name,platform:$('platform').value,sku:$('sku').value.trim(),category:$('category').value.trim(),price:n('price'),cost:n('cost'),stock:n('stock'),threshold:n('threshold'),status:$('status').value,notes:$('notes').value.trim()};
+let i=data.findIndex(x=>x.id===p.id);if(i<0)data.unshift(p);else data[i]=p;save();resetForm();alert('商品保存成功')}
+function edit(id){let p=data.find(x=>x.id===id);if(!p)return;Object.keys(p).forEach(k=>{if($(k))$(k).value=p[k]});$('formTitle').textContent='编辑商品';$('editor').scrollIntoView({behavior:'smooth'})}
+function del(id){if(confirm('确定删除这件商品吗？')){data=data.filter(x=>x.id!==id);save()}}
+function card(p){return '<div class="product"><div class="top"><b class="name">'+safe(p.name)+'</b><span class="tag">'+safe(p.platform)+'</span></div><div class="meta">SKU：'+safe(p.sku||'未填写')+' · '+safe(p.category||'未分类')+'<br>状态：'+safe(p.status)+'<br>售价 '+money(p.price)+'　成本 '+money(p.cost)+'<br>库存 <b class="'+(p.stock<=p.threshold?'low':'')+'">'+p.stock+'</b> 件　预警值 '+p.threshold+'<br>预估单件毛利 '+money(p.price-p.cost)+(p.stock<=p.threshold?'　<span class="low">库存偏低</span>':'')+'</div><div class="actions"><button class="btn" onclick="edit(\''+safe(p.id)+'\')">编辑</button><button class="btn danger" onclick="del(\''+safe(p.id)+'\')">删除</button></div></div>'}
+function render(){let q=$('search').value.toLowerCase(),f=$('filter').value,a=data.filter(p=>(!q||(p.name+' '+p.sku).toLowerCase().includes(q))&&(!f||p.platform===f));$('list').innerHTML=a.length?a.map(card).join(''):'<div class="empty">暂无商品，请先新增商品。</div>'}
+function refresh(){let low=data.filter(p=>p.stock<=p.threshold);$('count').textContent=data.length;$('active').textContent=data.filter(p=>p.status==='在售').length;$('totalStock').textContent=data.reduce((s,p)=>s+p.stock,0);$('lowCount').textContent=low.length;$('recent').innerHTML=data.slice(0,4).map(card).join('')||'<div class="empty">还没有商品</div>';$('stockList').innerHTML=low.map(card).join('')||'<div class="empty">暂无低库存商品</div>';render()}
+function exportCSV(){let cols=['name','platform','sku','category','price','cost','stock','threshold','status','notes'],rows=[cols.join(','),...data.map(p=>cols.map(k=>'"'+String(p[k]??'').replace(/"/g,'""')+'"').join(','))];let blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='EcomAI商品备份.csv';a.click();URL.revokeObjectURL(u)}
+function calc(){let p=n('sell'),v=p-n('buy')-n('ship')-n('fee')-n('ad');if(p<=0){alert('售价必须大于0');return}$('result').innerHTML='预估单件净利润：<b style="font-size:22px;color:'+(v>=0?'#15803d':'#dc2626')+'">'+money(v)+'</b><br>利润率：'+(v/p*100).toFixed(2)+'%<br>此为估算，未包含未填写的税费、退款及其他成本。'}
+refresh();
+</script>
+</body></html>
 
